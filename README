@@ -1,0 +1,36 @@
+Tema Morus Alexandru 323CC
+Explicare poze:
+
+In poza subiect1, se pot vedea 2 interfete wireshark, si 3 terminale(routerul 0, h0 si h1).
+Am dat un ping intre cele 2 hosturi, se va obersa 0% loss, iar in cele 2 wireshark se observa cate 2 cereri arp si un ping. Fiecare host a
+aflat din arp de celalat, si apoi s-a facut ping request si reply.
+Echo nume apare in partea stanga, in terminalul h0, pe cel mai de sus rand.
+
+In poza subiect2, am folosit arping pt a face cereri arp din h0 in alte hosturi. In poza se vede clar in partea de jos a terminalului h0 cum
+am dat arping h3. Am tramsnis 2 pachete inainte sa opresc, acesea au 0% loss, si se vad si in wireshark. Echo nume apare in terminalul h1 de
+mai sus.
+
+La urmatorul subiect am 2 poze, una cu comanda ping -t 1(subiect3_1) si una cu traceroute(subiect3_2). In prima am trimis pachete cu ttl 1, si
+asa cum se vede si in terminal si in wireshark, primesc ttl exceeddded si 100% packet loss. In poza 2, traceroute verifica ruta trimitand un 
+ttl pe fiecare host din ruta. Pt h0-h1, a gasit doar routerul si h1. Numele dat cu echo apare de mai multe ori in terminalul de deasupra 
+terminalului de unde dau comenzile.
+
+Explicare cod:
+Initial in main aloc memorie pt tabele, creez coada, declar structurile.
+Apoi intializez trie-le. Acolo parcurg toate adresele, vad cat de mare e masca(ca nr de biti) si apoi merg spre copilul 0 sau copilul 1 al
+structurii. La fial, marchez cu i(adica al cate-lea din tabel este) faptul ca se opreste o masca acolo.
+
+In while, primesc pachetul si verific daca este primit arp sau ip. Daca este arp, verific daca e request sau reply. Daca e request, inseamna ca
+apare cand 2 hosturi vorbesc intre ele, asa ca distribui mai departe. Daca e reply, poate fi un reply la ceva ce am dat eu request, asa ca 
+salvez in tabela de arp ce am primit, si parcurg coada de pachete, verificand daca exista pachete care asteptau dupa asta. Daca da, sunt
+tratate ca la ip(si ca in labul 4).
+
+Daca este ip ce am primit, se face verificarea de checksum, si daca e bun, merg pe verificarile pt icmp(daca am de facut un echo reply, daca 
+e ttl sau daca nu se poate ajunge). La toate 3 seteaza un header eth, ip, icmp, si apoi trimite din headerele vechi/ primii 64 de biti din
+pachet. In cazul in care nu exista in tabela arp next_hop/destinatie, fac arp request si il bag in coada(va fi scos la urmatoarele arp reply)
+
+Daca este ip si nu trebuie facut icmp, pur si simplu setez ethr-ul si adresele din el, si trimit mai departe la next_hop/il pun in coada si
+il trimit la next_hop cand il scot din coada.
+
+Cautarea in trie se face verificand masca cu adresa curenta bit cu bit, si ma opresc la cel mai mare prefix bun. Stiu ca acolo s-a oprit
+intrarea din tabela i, asa ca pot returna tabel[i].
